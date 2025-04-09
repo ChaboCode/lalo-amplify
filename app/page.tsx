@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthenticator } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import { useState, useEffect } from "react";
 import { generateClient } from "aws-amplify/data";
 import type { Schema } from "@/amplify/data/resource";
@@ -14,42 +14,49 @@ Amplify.configure(outputs);
 const client = generateClient<Schema>();
 
 export default function App() {
-  const {signOut} = useAuthenticator()
- const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const { authStatus, error, username } = useAuthenticator((context) => [
+    context.authStatus,
+    context.error,
+    context.username,
+  ]);
 
-  function listTodos() {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
+  const { signOut } = useAuthenticator();
+  const [records, setRecords] = useState<Array<Schema["Records"]["type"]>>([]);
+
+  function listRecords() {
+    client.models.Records.observeQuery().subscribe({
+      next: (data) => setRecords([...data.items]),
+    });
+  }
+
+  function logError() {
+    client.models.Records.create({
+      user: username,
+      loggedAt: Date.now(),
     });
   }
 
   useEffect(() => {
-    listTodos();
+    if (error) {
+      logError();
+    }
+  }, [error]);
+
+  useEffect(() => {
+    listRecords();
   }, []);
 
-  function createTodo() {
-    client.models.Todo.create({
-      content: window.prompt("Todo content"),
-    });
-  }
-
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/">
-          Review next steps of this tutorial.
-        </a>
-      </div>
-      <button onClick={signOut}>Sign out</button>
-    </main>
+    <Authenticator>
+      <main>
+        <h1>Login attemps</h1>
+        <ul>
+          {records.map((record) => (
+            <li key={record.id}>{record.user}</li>
+          ))}
+        </ul>
+        <button onClick={signOut}>Sign out</button>
+      </main>
+    </Authenticator>
   );
 }
