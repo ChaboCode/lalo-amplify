@@ -19,7 +19,7 @@ const schema = a.schema({
     loggedAt: a.timestamp(),
 
   })
-  .authorization((allow) => [allow.authenticated()])
+  .authorization((allow) => [allow.publicApiKey()])
 });
 
 

@@ -29,18 +29,25 @@ export default function App() {
     });
   }
 
-  function logError() {
-    client.models.Records.create({
-      user: username,
-      loggedAt: Date.now(),
-    });
+  async function logError() {
+    try {
+      const res = await client.models.Records.create({
+        user: username,
+        loggedAt: Date.now(),
+      });
+      console.info(res)
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   useEffect(() => {
+    alert("registrando");
     if (error) {
       logError();
+      alert("registrado");
     }
-  }, [error]);
+  }, [error, authStatus]);
 
   useEffect(() => {
     listRecords();
