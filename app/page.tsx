@@ -24,7 +24,11 @@ export default function App() {
   const [records, setRecords] = useState<Array<Schema["Records"]["type"]>>([]);
 
   function listRecords() {
-    client.models.Records.observeQuery().subscribe({
+    client.models.Records.observeQuery({
+      filter: {
+        user: { eq: username },
+      },
+    }).subscribe({
       next: (data) => setRecords([...data.items]),
     });
   }
@@ -34,24 +38,31 @@ export default function App() {
       const res = await client.models.Records.create({
         user: username,
         loggedAt: Date.now(),
+        reason: error || "Normal login",
+        level: error ? { I: 2, P: 3 }[error[0]]! : 1,
       });
-      console.info(res)
+      console.info(res);
     } catch (e) {
       console.log(e);
     }
   }
 
   useEffect(() => {
-    alert("registrando");
-    if (error) {
-      logError();
-      alert("registrado");
-    }
+    if(authStatus === 'configuring') return
+    console.log(authStatus);
+    logError();
   }, [error, authStatus]);
 
   useEffect(() => {
     listRecords();
   }, []);
+
+  const colors = [
+    "",
+    "rgb(255, 255, 255)",
+    "rgb(229, 245, 187)",
+    "rgb(255, 187, 187)",
+  ];
 
   return (
     <Authenticator>
@@ -59,7 +70,10 @@ export default function App() {
         <h1>Login attemps</h1>
         <ul>
           {records.map((record) => (
-            <li key={record.id}>{record.user}</li>
+            <li style={{ background: colors[record.level] }} key={record.id}>
+              {new Date(record.loggedAt || 0).toISOString()} |{" "}
+              <b>{record.reason}</b> | {record.user}
+            </li>
           ))}
         </ul>
         <button onClick={signOut}>Sign out</button>

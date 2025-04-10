@@ -14,14 +14,16 @@ const schema = a.schema({
     .authorization((allow) => [allow.publicApiKey()]),
 
   Records: a
-  .model({
-    user: a.string(),
-    loggedAt: a.timestamp(),
-
-  })
-  .authorization((allow) => [allow.publicApiKey()])
+    .model({
+      user: a.string().required(),
+      loggedAt: a.timestamp().required(),
+      reason: a.string().required(),
+      level: a.integer().required(),
+    })
+    .authorization((allow) => [
+      allow.publicApiKey(),
+    ]),
 });
-
 
 export type Schema = ClientSchema<typeof schema>;
 
